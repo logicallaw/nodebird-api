@@ -1,8 +1,9 @@
 const jwt=require("jsonwebtoken")
+const RateLimit=require('express-rate-limit')
 
 exports.verifyToken=(req,res,next)=>{
     try{
-        req.decoded=jwt.verify(req.headers.authorization,process.env.JWT_SECRET)
+        req.decoded=jwt.verify(req.headers.authorization, process.env.JWT_SECRET)
         return next()
     } catch(error){
         if (error.name === 'TokenExpiredError') {// 유효시간초과
@@ -17,4 +18,21 @@ exports.verifyToken=(req,res,next)=>{
         })
         
     }
+}
+exports.apiLimiter= RateLimit({
+    windowMs:60*1000, //1분
+    max:1,
+    handler(req,res){
+        res.status(this.statusCode).json({
+            code:this.statusCode, //기본값 429
+            message:'1분에 한번만 요청할 수 있습니다.',
+        })
+    }
+})
+
+exports.deprecated=(req,res)=>{
+    res.status(410).json({
+        code:410,
+        message:'새로운 버전이 나왔습니다. 새로운 버전을 사용하세요'
+    })
 }
